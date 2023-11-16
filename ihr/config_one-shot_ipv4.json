@@ -7,7 +7,7 @@
       "num_partitions": 10,
       "replication_factor": 1,
       "config": {
-        "retention.ms": "60480000000"
+        "retention.ms": "604800000000"
       }
     }
   },

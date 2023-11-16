@@ -5,9 +5,9 @@
     "leader_wait_minutes": 30,
     "default_topic_config": {
       "num_partitions": 10,
-      "replication_factor": 2,
+      "replication_factor": 1,
       "config": {
-        "retention.ms": "60480000000"
+        "retention.ms": "604800000000"
       }
     }
   },
