@@ -1,7 +1,11 @@
-## AS Hegemony
+## Tor Hegemony
 
-The purpose of this project is to calculate hegemony value for any AS or prefix globally reachable.
-
+The purpose of this project is to calculate hegemony value for any AS or prefix globally reachable in the Tor Network.
+Use InternetHealthReport/kafka-toolbox/bgp/producers/bgpstream2.py to download data before running the code here in order:
+1) produce_bgpatom
+3) produce_bcscore
+4) produce_hege
+   
 ### `produce_bgpatom`
 - running script
 ```commandline
@@ -53,13 +57,6 @@ python3 produce_hege.py -s 2020-08-01T00:00:00 -e 2020-08-01T00:15:00 -c rrc00,r
 ```commandline
 python3 produce_hege.py -p -s 2020-08-01T00:00:00 -e 2020-08-01T00:15:00 -c rrc00,rrc10,route-views.linx,route-views2
  ```
-
-### `hege_loader.py`
-- running script to get data from a specific scope
-```commandline
-python3 -m hege.hegemony.hege_loader -t 2020-08-01T00:00:00 -s as15169
-python3 -m hege.hegemony.hege_loader -t 2020-08-01T00:00:00 -s 8.8.8.8
-```
 
 ### config.json
 ```json
