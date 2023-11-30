@@ -173,6 +173,10 @@ if __name__ == "__main__":
         for c in debug_collectors:
             delete_topic([f"ihr_bgp_atom_{c}", f"ihr_bgp_atom_meta_{c}"])
 
+    elif command == "delete-weighted":
+        for c in debug_collectors:
+            delete_topic([f"bgp_weighted_atom_{c}"])
+
     elif command == "delete-bc-asn":
         for c in debug_collectors:
             delete_topic([f"ihr_bcscore_{c}", f"ihr_bcscore_meta_{c}"])
@@ -190,6 +194,7 @@ if __name__ == "__main__":
     elif command == "clean":
         for c in debug_collectors:
             delete_topic([f"ihr_bgp_atom_{c}", f"ihr_bgp_atom_meta_{c}"])
+            delete_topic([f"bgp_weighted_atom_{c}"])
             delete_topic([f"ihr_bcscore_{c}", f"ihr_bcscore_meta_{c}"])
             delete_topic([f"ihr_bcscore_prefix_{c}", f"ihr_bcscore_prefix_meta_{c}"])
         delete_topic(["ihr_hegemony", "ihr_hegemony_meta"])
