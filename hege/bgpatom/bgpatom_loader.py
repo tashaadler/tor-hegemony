@@ -8,7 +8,7 @@ from hege.utils.config import Config
 
         
 config = Config.get("bgpatom")
-BGPATOM_DATA_TOPIC = "bgp_weighted_atom" #config["data_topic"]
+BGPATOM_DATA_TOPIC = "ihr_bgp_weighted_atom" #config["data_topic"]
 BGPATOM_META_DATA_TOPIC = config["meta_data_topic"]
 
 
