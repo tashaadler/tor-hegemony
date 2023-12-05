@@ -236,6 +236,8 @@ def main() -> None:
     global start_ts, end_ts
     desc = """Produces a weighted topic"""
     parser = argparse.ArgumentParser(description=desc)
+    parser.add_argument('-y', '--year', type=int, help='Year to produce weighted atom for')
+    parser.add_argument('-m', '--month', type=int, help='Month to produce weighted atom for')
     parser.add_argument('-r', '--replication-factor', type=int,
                         help='replication factor for DEST (default: '
                              'replication factor of SOURCE)')
@@ -287,8 +289,12 @@ def main() -> None:
               f'{user_config}')
 
     topic_config = dict()
-    source = "ihr_bgp_atom_" + args.collector
-    destination = "ihr_bgp_weighted_atom_" + args.collector
+    month = args.month
+    if month < 10:
+        month = "0"+str(month)
+    date_string = str(args.year) + "_" + str(month)
+    source = "ihr_bgp_atom_" + args.collector + "_" + date_string
+    destination = "ihr_bgp_weighted_atom_" + args.collector + "_" + date_string
     if args.default:
         print('Using default topic configuration settings.')
     else:
