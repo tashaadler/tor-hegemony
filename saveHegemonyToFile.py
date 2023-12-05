@@ -2,6 +2,7 @@ import sys
 import msgpack
 import argparse
 import csv
+import os
 
 from confluent_kafka import Consumer, TopicPartition, KafkaError
 
@@ -11,7 +12,7 @@ This should copy all of the hegemony scores to a file called hegemonydata.csv
 
 # populates a csv file 'hegemonydata.csv' with a list of {asn, hege} values
 # not currently used
-def downloadDataToFile(server, num_partitions, topic):
+def downloadDataToFile(server, num_partitions, topic, month, year):
 
     consumer = Consumer({
         'bootstrap.servers': 'localhost:9092',
@@ -24,7 +25,7 @@ def downloadDataToFile(server, num_partitions, topic):
     partition = TopicPartition(topic, num_partitions, low)
     consumer.assign([partition])
 
-    with open('hegemonydata.csv', 'a', newline='') as file:
+    with open(filename, 'a', newline='') as file:
         file.truncate(0)  # delete old contents
         writer = csv.writer(file)
         i = 0
@@ -38,6 +39,8 @@ def downloadDataToFile(server, num_partitions, topic):
                 'headers': msg.headers(),
                 'value': msgpack.unpackb(msg.value(), raw=False)
             }
+
+
             data = msgdict['value']
             writer.writerow([data['asn'], data['hege']])
 
@@ -48,12 +51,21 @@ def downloadDataToFile(server, num_partitions, topic):
         consumer.close()
 
 if __name__ == '__main__':
+    datapath = "~/hegescores"
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', '--server', default='localhost:9092')
     parser.add_argument('-p', '--partitions', default=0)
     parser.add_argument('-t', '--topic', default='ihr_hegemony')
+    parser.add_argument('-m', '--month', default='2020')
+    parser.add_argument('-y', '--year', default='01')
 
     args = parser.parse_args()
 
+    # create folder for hegemony data
+    dataFolder = os.path.exists(datapath)
+    if not dataFolder:
+        os.mkdir(datapath)
+
     # searchByASNKafka(args.asn, args.topic, args.partitions, args.server)
-    downloadDataToFile(args.server, args.partitions, args.topic)
+    downloadDataToFile(args.server, args.partitions, args.topic, args.month, args.year)
