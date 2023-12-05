@@ -6,11 +6,11 @@ from hege.utils.config import Config
 
 if __name__ == "__main__":
     text = """This script consumes all collectors bcscore and produce
-    as hegemony score between --start_time and --end_time."""
+    as hegemony score for --month and --year."""
 
     parser = argparse.ArgumentParser(description=text)
-    parser.add_argument("--start_time", "-s", help="Choose the start time")
-    parser.add_argument("--end_time", "-e", help="Choose the end time")
+    parser.add_argument("--month", "-m", help="Choose the month")
+    parser.add_argument("--year", "-y", help="Choose the year")
     parser.add_argument("--collectors", "-c",
                         help="Choose your collectors: it should be written in the following patterns"
                              "collector1,collector2,collector3")
@@ -24,11 +24,18 @@ if __name__ == "__main__":
                         help="Path to the configuration file")
 
     args = parser.parse_args()
-    assert args.start_time and args.end_time
+    args = parser.parse_args()
+    
+    assert args.year and args.month
+    month_string = str(args.month)
+    if len(month_string) < 2:
+        month_string = "0" + month_string
+    start_time_string = str(args.year)+"-"+month_string+"-01T00:00:00"
+    end_time_string = str(args.year) + "-" month_string + "-02T00:00:00"
+
+    selected_collector = args.collector
 
     selected_collectors = list(map(lambda x: x.strip(), args.collectors.split(",")))
-    start_time_string = args.start_time
-    end_time_string = args.end_time
     Config.load(args.config_file)
 
     if args.prefix:
@@ -53,6 +60,6 @@ if __name__ == "__main__":
     start_ts = utils.str_datetime_to_timestamp(start_time_string)
     end_ts = utils.str_datetime_to_timestamp(end_time_string)
 
-    hege_builder = HegeBuilder(selected_collectors, start_ts, end_ts, args.prefix, args.partition_id, args.sparse_peers)
+    hege_builder = HegeBuilder(selected_collectors, start_ts, end_ts, start_year, start_month, args.prefix, args.partition_id, args.sparse_peers)
     hege_data_producer = DataProducer(hege_builder)
     hege_data_producer.produce_kafka_messages_between()

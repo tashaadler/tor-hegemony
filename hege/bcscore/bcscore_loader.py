@@ -15,17 +15,25 @@ PREFIX_BCSCORE_META_DATA_TOPIC = config["meta_data_topic__prefix"]
 
 
 class BCSCORELoader(DataLoader):
-    def __init__(self, collector: str, timestamp: int, prefix_mode=False, partition_id=None):
+    def __init__(self, collector: str, timestamp: int, year: int, month: int, prefix_mode=False, partition_id=None):
         super().__init__(timestamp)
         self.collector = collector
         self.prefix_mode = prefix_mode
         self.partition_id = partition_id
+        self.month = month
+        self.year = year
+        yearstr = str(self.year)
+
+        if self.month <10:
+            monthstr = '0' + str(self.month)
+        else:
+            monthstr = str(self.month)
         if prefix_mode:
             self.topic = f"{PREFIX_BCSCORE_DATA_TOPIC}_{collector}"
             self.metadata_topic = f"{PREFIX_BCSCORE_META_DATA_TOPIC}_{collector}"
         else:
-            self.topic = f"{AS_BCSCORE_DATA_TOPIC}_{collector}"
-            self.metadata_topic = f"{AS_BCSCORE_META_DATA_TOPIC}_{collector}"
+            self.topic = f"{AS_BCSCORE_DATA_TOPIC}_{collector}_{yearstr}_{monthstr}"
+            self.metadata_topic = f"{AS_BCSCORE_META_DATA_TOPIC}_{collector}_{yearstr}_{monthstr}"
 
         logging.debug(f"start consuming from {self.topic} at {self.timestamp}")
 

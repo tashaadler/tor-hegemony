@@ -17,28 +17,34 @@ DATA_BATCH_SIZE = 10000
 
 
 class BCScoreBuilder:
-    def __init__(self, collector: str, start_timestamp: int, end_timestamp: int, 
+    def __init__(self, collector: str, start_timestamp: str, end_timestamp: str, year: int, month: int, 
             prefix_mode=False, address_family=4):
         self.collector = collector
-        self.start_timestamp = math.ceil(start_timestamp/DUMP_INTERVAL) * DUMP_INTERVAL
+        self.year = year
+        self.month = month
+        self.start_timestamp = start_timestamp
         self.end_timestamp = end_timestamp
         self.prefix_mode = prefix_mode
         self.address_family = address_family
-
+        yearstr = str(self.year)
+        if month <10:
+            monthstr = '0' + str(self.month)
+        else:
+            monthstr = str(self.month)
         if prefix_mode:
             self.kafka_data_topic = f"{PREFIX_BCSCORE_DATA_TOPIC}_{collector}"
             self.kafka_meta_data_topic = f"{PREFIX_BCSCORE_META_DATA_TOPIC}_{collector}"
         else:
-            self.kafka_data_topic = f"{AS_BCSCORE_DATA_TOPIC}_{collector}"
-            self.kafka_meta_data_topic = f"{AS_BCSCORE_META_DATA_TOPIC}_{collector}"
+            self.kafka_data_topic = f"{AS_BCSCORE_DATA_TOPIC}_{collector}_{yearstr}_{monthstr}"
+            self.kafka_meta_data_topic = f"{AS_BCSCORE_META_DATA_TOPIC}_{collector}_{yearstr}_{monthstr}"
 
     def consume_and_calculate(self):
         for current_timestamp in range(self.start_timestamp, self.end_timestamp, DUMP_INTERVAL):
             bgpatom = self.load_bgpatom(current_timestamp)
             yield current_timestamp, self.get_viewpoint_bcscore_generator(bgpatom, current_timestamp)
 
-    def load_bgpatom(self, atom_timestamp):
-        bgpatom = BGPAtomLoader(self.collector, atom_timestamp).load_data()
+    def load_bgpatom(self, atom_timestamp, year, month):
+        bgpatom = BGPAtomLoader(self.collector, atom_timestamp, year, month).load_data()
         return bgpatom
 
     def get_viewpoint_bcscore_generator(self, bgpatom: dict, atom_timestamp: int):

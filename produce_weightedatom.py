@@ -181,47 +181,44 @@ def copy_data(source: str, dest: str, bootstrap_server: str) -> None:
                 ASbandwidth = ASbandwidthDict[lastAS]
                 repFactor = int(round((maxpaths*ASbandwidth)/(maxbandwidth)))
                 unpacked["aspath"] = aslist
-                newpath = msgpack.packb(unpacked, use_bin_type=True)
-            else:
-                newpath = msgpack.packb(unpacked, use_bin_type=True)
-            
+                newpath = msgpack.packb(unpacked, use_bin_type=True)  
       
-            ts = msg.timestamp()
-            if ts[0] != TIMESTAMP_CREATE_TIME:
-                print(f'Message has unexpected timestamp type: {ts[0]}')
-                continue
-            if ts[1] < start_ts:
-                continue
-            if end_ts != OFFSET_END and ts[1] >= end_ts:
-                print(f'Partition {msg.partition()} reached end of specified '
-                      f'time interval')
-                consumer.pause([TopicPartition(msg.topic(), msg.partition())])
-                paused_partitions += 1
-                if paused_partitions >= total_partitions:
-                    break
-                else:
+                ts = msg.timestamp()
+                if ts[0] != TIMESTAMP_CREATE_TIME:
+                    print(f'Message has unexpected timestamp type: {ts[0]}')
                     continue
+                if ts[1] < start_ts:
+                    continue
+                if end_ts != OFFSET_END and ts[1] >= end_ts:
+                    print(f'Partition {msg.partition()} reached end of specified '
+                      f'time interval')
+                    consumer.pause([TopicPartition(msg.topic(), msg.partition())])
+                    paused_partitions += 1
+                    if paused_partitions >= total_partitions:
+                        break
+                    else:
+                        continue
             
-            for x in range (0,repFactor):
+                for x in range (0,repFactor):
 
-                try:
+                    try:
                 
-                    producer.produce(dest,
+                        producer.produce(dest,
                                     key=msg.key(),
                                     value=newpath,
                                     timestamp=ts[1],
                                     on_delivery=delivery_report)
-                except BufferError:
-                    print('Buffer error. Flushing queue...')
-                    producer.flush(TIMEOUT_IN_S)
-                    print('Rewriting previous message')
-                    producer.produce(dest,
+                    except BufferError:
+                        print('Buffer error. Flushing queue...')
+                        producer.flush(TIMEOUT_IN_S)
+                        print('Rewriting previous message')
+                        producer.produce(dest,
                                     key=msg.key(),
                                     value=msg.value(),
                                     timestamp=ts[1],
                                     on_delivery=delivery_report)
-                producer.poll(0)
-                msg_count += 1
+                    producer.poll(0)
+                    msg_count += 1
     finally:
         read_fin = datetime.now().timestamp()
         print(f'Finished reading after {read_fin - perf_start:.2f} s')
@@ -292,6 +289,7 @@ def main() -> None:
     month = args.month
     if month < 10:
         month = "0"+str(month)
+  
     date_string = str(args.year) + "_" + str(month)
     source = "ihr_bgp_atom_" + args.collector + "_" + date_string
     destination = "ihr_bgp_weighted_atom_" + args.collector + "_" + date_string

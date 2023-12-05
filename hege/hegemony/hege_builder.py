@@ -13,21 +13,28 @@ INTERVAL = Config.get("hege")["dump_interval"]
 
 
 class HegeBuilder:
-    def __init__(self, collectors, start_timestamp: int, end_timestamp: int, 
+    def __init__(self, collectors, year: int, month: int, start_timestamp: str, end_timestamp: str,
             prefix_mode=False, partition_id=None, sparse_peers=False):
         self.collectors = collectors
+        self.year = year
+        self.month = month
         self.start_timestamp = start_timestamp
         self.end_timestamp = end_timestamp
         self.prefix_mode = prefix_mode
         self.partition_id = partition_id
         self.sparse_peers = sparse_peers
+        if month < 10:
+            monthstr = '0'+ str(self.month)
+        else:
+            monthstr = str(self.month)
+        yearstr = str(self.year)
 
         if prefix_mode:
             self.kafka_data_topic = PREFIX_HEGE_DATA_TOPIC
             self.kafka_meta_data_topic = PREFIX_HEGE_META_DATA_TOPIC
         else:
-            self.kafka_data_topic = AS_HEGE_DATA_TOPIC
-            self.kafka_meta_data_topic = AS_HEGE_META_DATA_TOPIC
+            self.kafka_data_topic = AS_HEGE_DATA_TOPIC + "_" + yearstr + "_" + monthstr
+            self.kafka_meta_data_topic = AS_HEGE_META_DATA_TOPIC + "_" + yearstr + "_" + monthstr
 
     def consume_and_calculate(self):
         for timestamp in range(self.start_timestamp, self.end_timestamp, INTERVAL):

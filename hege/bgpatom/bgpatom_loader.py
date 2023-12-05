@@ -13,11 +13,21 @@ BGPATOM_META_DATA_TOPIC = config["meta_data_topic"]
 
 
 class BGPAtomLoader(DataLoader):
-    def __init__(self, collector: str, timestamp: int):
+    def __init__(self, collector: str, timestamp: int, year: int, month: int):
         super().__init__(timestamp)
         self.collector = collector
-        self.topic = f"{BGPATOM_DATA_TOPIC}_{collector}"
-        self.metadata_topic = f"{BGPATOM_META_DATA_TOPIC}_{collector}"
+        self.timestamp = timestamp
+        self.year = year
+        self.month = month
+        if self.month < 10:
+            monthstr = '0' + str(month)
+        else:
+            monthstr = str(month)
+
+        yearstr = str(year)
+        
+        self.topic = f"{BGPATOM_DATA_TOPIC}_{collector}_{yearstr}_{monthstr}"
+        self.metadata_topic = f"{BGPATOM_META_DATA_TOPIC}_{collector}_{yearstr}_{monthstr}"
         logging.debug(f"start consuming from {self.topic} at {timestamp}")
 
     @staticmethod

@@ -12,14 +12,20 @@ BGPATOM_META_DATA_TOPIC = Config.get("bgpatom")["meta_data_topic"]
 
 
 class BGPAtomBuilder:
-    def __init__(self, collector, start_timestamp: int, end_timestamp: int):
+    def __init__(self, collector, start_timestamp: str, end_timestamp: str, year: int, month: int):
         self.collector = collector
+        self.year = year 
+        self.month = month
         self.start_timestamp = start_timestamp
         self.end_timestamp = end_timestamp
         self.bgpatom_peers = dict()
-
-        self.kafka_data_topic = f"{BGPATOM_DATA_TOPIC}_{collector}"
-        self.kafka_meta_data_topic = f"{BGPATOM_META_DATA_TOPIC}_{collector}"
+        yearstr = str(year)
+        if self.month< 10:
+            monthstr = '0' + str(self.month)
+        else:
+            monthstr = str(self.month)
+        self.kafka_data_topic = f"{BGPATOM_DATA_TOPIC}_{collector}_{yearstr}_{monthstr}"
+        self.kafka_meta_data_topic = f"{BGPATOM_META_DATA_TOPIC}_{collector}_{yearstr}_{monthstr}"
 
     def get_bgpatom_peer(self, peer_address: str):
         if peer_address not in self.bgpatom_peers:

@@ -1,5 +1,4 @@
 import sys
-import os
 import argparse
 from confluent_kafka import Producer
 from confluent_kafka.admin import AdminClient, NewTopic
@@ -8,19 +7,13 @@ from datetime import datetime
 from datetime import timedelta
 import msgpack
 import logging
-import json
+import os
 
-from hege.utils.config import Config
-
-# Initialized in the __main__
-RIB_BUFFER_INTERVAL = None 
-BGP_DATA_TOPIC_PREFIX = None
-DATA_RETENTION = None
-
+"""This script was originally from the IHR kafka-toolbox repository, located at
+/bgp/producers/bgpstream2.py. We have made minor edits."""
 
 def dt2ts(dt):
     return int((dt - datetime(1970, 1, 1)).total_seconds())
-
 
 def delivery_report(err, msg):
     """ Called once for each message produced to indicate delivery result.
@@ -32,47 +25,50 @@ def delivery_report(err, msg):
         pass
 
 
-def get_record_dict(record):
-    record_dict = dict()
+def getRecordDict(record):
+    recordDict = {}
 
-    record_dict["project"] = record.project
-    record_dict["collector"] = record.collector
-    record_dict["type"] = record.type
-    record_dict["dump_time"] = record.dump_time
-    record_dict["time"] = record.time
-    record_dict["status"] = record.status
-    record_dict["dump_position"] = record.dump_position
+    recordDict["project"] = record.project
+    recordDict["collector"] = record.collector
+    recordDict["type"] = record.type
+    recordDict["dump_time"] = record.dump_time
+    recordDict["time"] = record.time
+    recordDict["status"] = record.status
+    recordDict["dump_position"] = record.dump_position
 
-    return record_dict
+    return recordDict
 
 
-def get_element_dict(element):
-    element_dict = dict()
+def getElementDict(element):
+    elementDict = {}
 
-    element_dict["type"] = element.type
-    element_dict["time"] = element.time
-    element_dict["peer_asn"] = element.peer_asn
-    element_dict["peer_address"] = element.peer_address
-    element_dict["fields"] = element.fields
+    elementDict["type"] = element.type
+    elementDict["time"] = element.time
+    elementDict["peer_asn"] = element.peer_asn
+    elementDict["peer_address"] = element.peer_address
+    elementDict["fields"] = element.fields
     if 'communities' in element.fields:
-        element_dict['fields']['communities'] = list(element.fields['communities'])
+        elementDict['fields']['communities'] = list(element.fields['communities'])
 
-    return element_dict
+    return elementDict
 
 
-def push_data(record_type, collector, startts, endts):
+def pushData(record_type, collector, startts, endts):
+
     stream = BGPStream(
-        from_time=str(startts), until_time=str(endts), collectors=[collector],
-        record_type=record_type
-    )
+            from_time=str(startts), until_time=str(endts), collectors=[collector],
+            record_type=record_type
+            )
+
+    yearstr = startts[0:4]
+    monthstr = startts[5:7]
 
     # Create kafka topic
-    topic = BGP_DATA_TOPIC_PREFIX + "_" + collector + "_" + record_type
-    admin_client = AdminClient({'bootstrap.servers': 'localhost:9092'})
+    topic = "ihr_bgp_" + collector + "_" + record_type + "_" + yearstr + "_" + monthstr
+    admin_client = AdminClient({'bootstrap.servers': KAFKA_HOST})
 
-    topic_list = [NewTopic(topic, num_partitions=1, replication_factor=1, config={"retention.ms": DATA_RETENTION})]
+    topic_list = [NewTopic(topic, num_partitions=1, replication_factor=1)]
     created_topic = admin_client.create_topics(topic_list)
-
     for topic, f in created_topic.items():
         try:
             f.result()  # The result itself is None
@@ -81,43 +77,46 @@ def push_data(record_type, collector, startts, endts):
             logging.warning("Failed to create topic {}: {}".format(topic, e))
 
     # Create producer
-    producer = Producer({'bootstrap.servers': 'localhost:9092',
-                         # 'linger.ms': 1000,
-                         'default.topic.config': {'compression.codec': 'snappy'}})
-
-    for rec in stream.records():
+    producer = Producer({'bootstrap.servers': KAFKA_HOST,
+        # 'linger.ms': 1000, 
+        'queue.buffering.max.messages': 10000000,
+        'queue.buffering.max.kbytes': 2097151,
+        'linger.ms': 200,
+        'batch.num.messages': 1000000,
+        'message.max.bytes': 999000,
+        'default.topic.config': {'compression.codec': 'snappy'}}) 
+    
+    for i, rec in enumerate(stream.records()):
         completeRecord = {}
-        completeRecord["rec"] = get_record_dict(rec)
+        completeRecord["rec"] = getRecordDict(rec)
         completeRecord["elements"] = []
 
-        recordTimeStamp = int(rec.time * 1000)
+        recordTimeStamp = int(rec.time*1000)
 
         for elem in rec:
-            elementDict = get_element_dict(elem)
+            elementDict = getElementDict(elem)
             completeRecord["elements"].append(elementDict)
 
         try:
             producer.produce(
-                topic,
-                msgpack.packb(completeRecord, use_bin_type=True),
+                topic, 
+                msgpack.packb(completeRecord, use_bin_type=True), 
                 callback=delivery_report,
-                timestamp=recordTimeStamp
+                timestamp = recordTimeStamp
                 )
 
             # Trigger any available delivery report callbacks from previous produce() calls
             producer.poll(0)
-
         except BufferError:
-            logging.warning('buffer error, the queue must be full! Flushing...')
+            logging.warning('Buffer error, the queue must be full! Flushing...')
             producer.flush()
 
-            logging.info('queue flushed, try re-write previous message')
-
+            logging.info('Queue flushed, will write the message again')
             producer.produce(
-                topic,
-                msgpack.packb(completeRecord, use_bin_type=True),
+                topic, 
+                msgpack.packb(completeRecord, use_bin_type=True), 
                 callback=delivery_report,
-                timestamp=recordTimeStamp
+                timestamp = recordTimeStamp
             )
             producer.poll(0)
 
@@ -125,29 +124,23 @@ def push_data(record_type, collector, startts, endts):
     # callbacks to be triggered.
     producer.flush()
 
-
 if __name__ == '__main__':
+
+    global KAFKA_HOST
+    KAFKA_HOST = os.environ["KAFKA_HOST"]
 
     text = "This script pushes BGP data from specified collector(s) \
 for the specified time window to Kafka topic(s). The created topics have only \
 one partition in order to make sequential reads easy. If no start and end time \
 is given then it download data for the current hour."
 
-    parser = argparse.ArgumentParser(description=text)
-    parser.add_argument("--collector", "-c", help="Choose collector to push data for")
-    parser.add_argument("--startTime", "-s",
-                        help="Choose start time (Format: Y-m-dTH:M:S; Example: 2017-11-06T16:00:00)")
-    parser.add_argument("--endTime", "-e", help="Choose end time (Format: Y-m-dTH:M:S; Example: 2017-11-06T16:00:00)")
-    parser.add_argument("--type", "-t", help="Choose record type: ribs or updates")
-    parser.add_argument("--config_file", "-C",
-                        help="Path to the configuration file")
+    parser = argparse.ArgumentParser(description = text)  
+    parser.add_argument("--collector","-c",help="Choose collector to push data for")
+    parser.add_argument("--year","-y",help="Choose the year (Format: yyyy; Example: 2017)")
+    parser.add_argument("--month","-m",help="Choose the month (Format: mm or m; Example: 9)")
+    parser.add_argument("--type","-t",help="Choose record type: ribs or updates")
 
-    args = parser.parse_args()
-    Config.load(args.config_file)
-
-    RIB_BUFFER_INTERVAL = Config.get("bgp_data")["rib_buffer_interval"]
-    BGP_DATA_TOPIC_PREFIX = Config.get("bgp_data")["data_topic"]
-    DATA_RETENTION = Config.get("kafka")["default_topic_config"]["config"]["retention.ms"]
+    args = parser.parse_args() 
 
     # initialize recordType
     recordType = ""
@@ -165,50 +158,39 @@ is given then it download data for the current hour."
     else:
         sys.exit("Collector(s) not specified")
 
-    # initialize time to start
+    # initialize time to start and end
     timeWindow = 15
     currentTime = datetime.utcnow()
-    minuteStart = int(currentTime.minute / timeWindow) * timeWindow
+    minuteStart = int(currentTime.minute/timeWindow)*timeWindow
     timeStart = ""
-    if args.startTime:
-        timeStart = args.startTime
+    timeEnd = ""
+    if args.month and args.year:
+        timeStart = str(args.year) + "-" + str(args.month) + "-01T00:00:00"
+        timeEnd = str(args.year) + "-" + str(args.month) + "-02T00:00:00"
     else:
         if recordType == 'updates':
-            timeStart = currentTime.replace(microsecond=0, second=0, minute=minuteStart) - timedelta(
-                minutes=2 * timeWindow)
+            timeStart = currentTime.replace(microsecond=0, second=0, minute=minuteStart)-timedelta(minutes=3*timeWindow)
+            timeEnd = currentTime.replace(microsecond=0, second=0, minute=minuteStart)-timedelta(minutes=2*timeWindow)
         else:
             delay = 120
             if 'rrc' in collector:
                 delay = 480
-            timeStart = currentTime - timedelta(minutes=delay)
-
-    # initialize time to end
-    timeEnd = ""
-    if args.endTime:
-        timeEnd = args.endTime
-    else:
-        if recordType == 'updates':
-            timeEnd = currentTime.replace(microsecond=0, second=0, minute=minuteStart) - timedelta(
-                minutes=1 * timeWindow)
-        else:
+            timeStart = currentTime-timedelta(minutes=delay)
             timeEnd = currentTime
 
+
     FORMAT = '%(asctime)s %(processName)s %(message)s'
-    logDir = '/log/'
-    if not os.path.exists(logDir):
-        logDir = './'
     logging.basicConfig(
-        format=FORMAT, filename=f'{logDir}/ihr-kafka-bgpstream2_{collector}.log',
-        level=logging.WARN, datefmt='%Y-%m-%d %H:%M:%S'
-    )
+            format=FORMAT, 
+            level=logging.WARN,
+            datefmt='%Y-%m-%d %H:%M:%S',
+            handlers=[logging.StreamHandler()]
+            )
     logging.warning("Started: %s" % sys.argv)
     logging.warning("Arguments: %s" % args)
     logging.warning('start time: {}, end time: {}'.format(timeStart, timeEnd))
 
     logging.warning("Downloading {} data for {}".format(recordType, collector))
-    push_data(recordType, collector, timeStart, timeEnd)
-
+    pushData(recordType, collector, timeStart, timeEnd)
+        
     logging.warning("End: %s" % sys.argv)
-
-    # python3 /app/produce_bgpdata.py -t ribs --collector rrc10 --startTime 2020-08-01T00:00:00 --endTime 2020-08-02T00:00:00
-    # python3 /app/produce_bgpdata.py -t updates --collector rrc10 --startTime 2020-08-01T00:00:00 --endTime 2020-08-02T00:00:00

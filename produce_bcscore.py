@@ -11,8 +11,8 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description=text)
     parser.add_argument("--collector", "-c", help="Choose collector to push data for")
-    parser.add_argument("--start_time", "-s", help="Choose the start time")
-    parser.add_argument("--end_time", "-e", help="Choose the end time ")
+    parser.add_argument("--year", "-y", help="Choose the year")
+    parser.add_argument("--month", "-m", help="Choose the month")
     parser.add_argument("--ip_version", "-v",
                         help="Address family to analyze IPv4 or IPv6. Value should be 4 or 6.",
                         default=4)
@@ -23,11 +23,14 @@ if __name__ == "__main__":
                         help="Path to the configuration file",)
 
     args = parser.parse_args()
-    assert args.start_time and args.collector and args.end_time
+    assert args.year and args.month
+    month_string = str(args.month)
+    if len(month_string) < 2:
+        month_string = "0" + month_string
+    start_time_string = str(args.year)+"-"+month_string+"-01T00:00:00"
+    end_time_string = str(args.year) + "-" month_string + "-02T00:00:00"
 
     selected_collector = args.collector
-    start_time_string = args.start_time
-    end_time_string = args.end_time
     prefix_mode = args.prefix
     address_family = int(args.ip_version)
     Config.load(args.config_file)
@@ -49,6 +52,6 @@ if __name__ == "__main__":
     start_ts = utils.str_datetime_to_timestamp(start_time_string)
     end_ts = utils.str_datetime_to_timestamp(end_time_string)
 
-    bcscore_builder = BCScoreBuilder(selected_collector, start_ts, end_ts, prefix_mode, address_family)
+    bcscore_builder = BCScoreBuilder(selected_collector, start_ts, end_ts, start_year, start_month, prefix_mode, address_family)
     bcscore_data_producer = DataProducer(bcscore_builder)
     bcscore_data_producer.produce_kafka_messages_between()
