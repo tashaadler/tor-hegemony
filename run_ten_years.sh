@@ -22,7 +22,7 @@ for month in {1..12}; do
 
     # Produce bgpatom and weighted_atom for one collector
     python3 produce_bgpatom.py -c $collector --year $year --month $month
-    python3 produce_weightedatom.py -c $collector --year $year --month $month
+    python3 produce_weightedatom.py -l $collector --year $year --month $month
 
     # Produce bc_score for all of the collectors
     python3 produce_bcscore.py -c $collector --year $year --month $month
