@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
     selected_collector = args.collector
     start_time_string = str(args.year)+"-"+str(month)+"-01T00:00:00"
-    end_time_string = str(args.year) + "-" + str(month) + "-02T00:00:00"
+    end_time_string = str(args.year) + "-" str(month) + "-02T00:00:00"
 
     Config.load(args.config_file)
 
