@@ -1,0 +1,1 @@
+The testBashScript directory provides a testing environment for the run_ten_years.sh bash script. The run_ten_years.sh bash script is designed to compute hegemony scores over 10 years. This takes a long time. This folder exists to test that the syntax and arguments are correct.
