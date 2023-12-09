@@ -1,5 +1,8 @@
 import subprocess
-
+import argparse
+import multiprocessing
+import os
+import sys
 
 def run_one_month(month, year):
     collectors = ["rrc10", "rrc00", "route-views2", "route-views.linx"]
@@ -37,3 +40,55 @@ def run_one_month(month, year):
     # download the hege scores for this time period to a csv file
     cmd = "python3 save_hege_scores.py --year " + str(year) + " --month " + str(month)
     subprocess.call(cmd, shell=True)
+
+
+
+def main() -> None:
+    """Command line main function."""
+
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument(
+        "--start_year",
+        type=int,
+        default=2012
+    )
+    ap.add_argument(
+        "--end_year",
+        type=int,
+        default=2022
+    )    
+    ap.add_argument(
+        "--start_month",
+        type=int,
+        default=1
+    )    
+    ap.add_argument(
+        "--end_month",
+        type=int,
+        default=12
+    )
+    ap.add_argument(
+        "-p",
+        "--parallel"
+        type=int,
+        default=6
+    )
+    args = ap.parse_args()
+
+    years = range(args.start_year, args.end_year+1)
+    months = range(args.start_month, args.end_month+1)
+
+    poollist = []
+
+    for month in months:
+        for year in years:
+            temptuple = [year, month]
+            poollist.append(temptuple)
+
+    with multiprocessing.Pool(processes=args.parallel) as pool:
+        for result in pool.map(run_one_month, poollist):
+            print("IHR_HEGE " + str(year) + ' ' + str(month) + " produced")
+        pool.close()
+
+if __name__ == "__main__":
+    main()
