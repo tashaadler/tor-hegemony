@@ -31,9 +31,7 @@ if __name__ == "__main__":
     if len(month_string) < 2:
         month_string = "0" + month_string
     start_time_string = str(args.year)+"-"+month_string+"-01T00:00:00"
-    end_time_string = str(args.year) + "-" month_string + "-02T00:00:00"
-
-    selected_collector = args.collector
+    end_time_string = str(args.year) + "-" + month_string + "-02T00:00:00"
 
     selected_collectors = list(map(lambda x: x.strip(), args.collectors.split(",")))
     Config.load(args.config_file)
