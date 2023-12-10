@@ -286,11 +286,12 @@ def main() -> None:
               f'{user_config}')
 
     topic_config = dict()
-    month = args.month
-    if month < 10:
-        month = "0"+str(month)
+    monthstr = str(args.month)
+    
+    if len(monthstr)<2:
+        monthstr = "0"+str(monthstr)
   
-    date_string = str(args.year) + "_" + str(month)
+    date_string = str(args.year) + "_" + monthstr
     source = "ihr_bgp_atom_" + args.collector + "_" + date_string
     destination = "ihr_bgp_weighted_atom_" + args.collector + "_" + date_string
     if args.default:

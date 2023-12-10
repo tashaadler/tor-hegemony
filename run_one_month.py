@@ -4,7 +4,9 @@ import multiprocessing
 import os
 import sys
 
-def run_one_month(month, year):
+def run_one_month(datetuple):
+    year = datetuple[0]
+    month = datetuple[1]
     collectors = ["rrc10", "rrc00", "route-views2", "route-views.linx"]
     collectorsStr = ""
     for collector in collectors:
@@ -14,10 +16,10 @@ def run_one_month(month, year):
 
     # Load the ribs/updates data into the kafka topics for one collector
     for collector in collectors:
-        cmd = "KAFKA_HOST=localhost:9092 python produce_bgpdata.py -t ribs --collector " + collector + " --year " + str(
+        cmd = "KAFKA_HOST=localhost:9092 python3 produce_bgpdata.py -t ribs --collector " + collector + " --year " + str(
             year) + " --month " + str(month)
         subprocess.call(cmd, shell=True)  # returns the exit code in unix
-        cmd = "KAFKA_HOST=localhost:9092 python produce_bgpdata.py -t updates --collector " + collector + " --year " + str(
+        cmd = "KAFKA_HOST=localhost:9092 python3 produce_bgpdata.py -t updates --collector " + collector + " --year " + str(
             year) + " --month " + str(month)
         subprocess.call(cmd, shell=True)
 
@@ -69,7 +71,7 @@ def main() -> None:
     )
     ap.add_argument(
         "-p",
-        "--parallel"
+        "--parallel",
         type=int,
         default=6
     )

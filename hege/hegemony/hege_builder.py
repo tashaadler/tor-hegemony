@@ -23,18 +23,17 @@ class HegeBuilder:
         self.prefix_mode = prefix_mode
         self.partition_id = partition_id
         self.sparse_peers = sparse_peers
-        if month < 10:
-            monthstr = '0'+ str(self.month)
-        else:
-            monthstr = str(self.month)
-        yearstr = str(self.year)
+        self.monthstr = str(self.month)
+        self.yearstr = str(self.year)
+        if len(self.monthstr) < 2:
+            self.monthstr = '0'+ self.monthstr
 
         if prefix_mode:
             self.kafka_data_topic = PREFIX_HEGE_DATA_TOPIC
             self.kafka_meta_data_topic = PREFIX_HEGE_META_DATA_TOPIC
         else:
-            self.kafka_data_topic = AS_HEGE_DATA_TOPIC + "_" + yearstr + "_" + monthstr
-            self.kafka_meta_data_topic = AS_HEGE_META_DATA_TOPIC + "_" + yearstr + "_" + monthstr
+            self.kafka_data_topic = AS_HEGE_DATA_TOPIC + "_" + self.yearstr + "_" + self.monthstr
+            self.kafka_meta_data_topic = AS_HEGE_META_DATA_TOPIC + "_" + self.yearstr + "_" + self.monthstr
 
     def consume_and_calculate(self):
         for timestamp in range(self.start_timestamp, self.end_timestamp, INTERVAL):

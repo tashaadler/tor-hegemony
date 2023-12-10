@@ -20,10 +20,10 @@ class BGPAtomBuilder:
         self.end_timestamp = end_timestamp
         self.bgpatom_peers = dict()
         yearstr = str(year)
-        if self.month< 10:
-            monthstr = '0' + str(self.month)
-        else:
-            monthstr = str(self.month)
+        monthstr = str(month)
+        if len(monthstr)< 2:
+            monthstr = '0' + monthstr
+    
         self.kafka_data_topic = f"{BGPATOM_DATA_TOPIC}_{collector}_{yearstr}_{monthstr}"
         self.kafka_meta_data_topic = f"{BGPATOM_META_DATA_TOPIC}_{collector}_{yearstr}_{monthstr}"
 

@@ -22,18 +22,17 @@ class BCSCORELoader(DataLoader):
         self.partition_id = partition_id
         self.month = month
         self.year = year
-        yearstr = str(self.year)
-
-        if self.month <10:
-            monthstr = '0' + str(self.month)
-        else:
-            monthstr = str(self.month)
+        self.yearstr = str(self.year)
+        self.monthstr = str(self.month)
+        if len(self.monthstr) <2:
+            self.monthstr = '0' + self.monthstr
+        
         if prefix_mode:
             self.topic = f"{PREFIX_BCSCORE_DATA_TOPIC}_{collector}"
             self.metadata_topic = f"{PREFIX_BCSCORE_META_DATA_TOPIC}_{collector}"
         else:
-            self.topic = f"{AS_BCSCORE_DATA_TOPIC}_{collector}_{yearstr}_{monthstr}"
-            self.metadata_topic = f"{AS_BCSCORE_META_DATA_TOPIC}_{collector}_{yearstr}_{monthstr}"
+            self.topic = f"{AS_BCSCORE_DATA_TOPIC}_{collector}_{self.yearstr}_{self.monthstr}"
+            self.metadata_topic = f"{AS_BCSCORE_META_DATA_TOPIC}_{collector}_{self.yearstr}_{self.monthstr}"
 
         logging.debug(f"start consuming from {self.topic} at {self.timestamp}")
 

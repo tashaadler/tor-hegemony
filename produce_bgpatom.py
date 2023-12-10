@@ -18,16 +18,14 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     assert args.year and args.collector and args.month
-     
-    if args.month < 10:
-        month = '0' + str(args.month)
-    else:
-        month = str(args.month)
+    monthstr = str(args.month)
+    if len(monthstr) < 2:
+        monthstr = '0' + monthstr
 
-
+    yearstr = str(args.year)
     selected_collector = args.collector
-    start_time_string = str(args.year)+"-"+str(month)+"-01T00:00:00"
-    end_time_string = str(args.year) + "-" str(month) + "-02T00:00:00"
+    start_time_string = str(yearstr)+"-"+str(monthstr)+"-01T00:00:00"
+    end_time_string = str(yearstr) + "-" + str(monthstr) + "-02T00:00:00"
 
     Config.load(args.config_file)
 
@@ -48,6 +46,6 @@ if __name__ == "__main__":
     start_ts = utils.str_datetime_to_timestamp(start_time_string)
     end_ts = utils.str_datetime_to_timestamp(end_time_string)
 
-    bgpatom_builder = BGPAtomBuilder(selected_collector, start_ts, end_ts, start_year, start_month)
+    bgpatom_builder = BGPAtomBuilder(selected_collector, start_ts, end_ts, year, month)
     bgpatom_data_producer = DataProducer(bgpatom_builder)
     bgpatom_data_producer.produce_kafka_messages_between()

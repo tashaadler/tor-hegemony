@@ -24,11 +24,12 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     assert args.year and args.month
+    year_string = str(args.year)
     month_string = str(args.month)
     if len(month_string) < 2:
         month_string = "0" + month_string
-    start_time_string = str(args.year)+"-"+month_string+"-01T00:00:00"
-    end_time_string = str(args.year) + "-" month_string + "-02T00:00:00"
+    start_time_string = str(year_string)+"-" + month_string + "-01T00:00:00"
+    end_time_string = str(year_string) + "-" + month_string + "-02T00:00:00"
 
     selected_collector = args.collector
     prefix_mode = args.prefix
@@ -48,10 +49,10 @@ if __name__ == "__main__":
     from hege.bcscore.bcscore_builder import BCScoreBuilder
     from hege.utils.data_producer import DataProducer
     from hege.utils import utils
-
+    
     start_ts = utils.str_datetime_to_timestamp(start_time_string)
     end_ts = utils.str_datetime_to_timestamp(end_time_string)
-
-    bcscore_builder = BCScoreBuilder(selected_collector, start_ts, end_ts, start_year, start_month, prefix_mode, address_family)
+    
+    bcscore_builder = BCScoreBuilder(selected_collector, start_ts, end_ts, year_string, month_string, prefix_mode, address_family)
     bcscore_data_producer = DataProducer(bcscore_builder)
     bcscore_data_producer.produce_kafka_messages_between()

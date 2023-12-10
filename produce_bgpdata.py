@@ -53,15 +53,16 @@ def getElementDict(element):
     return elementDict
 
 
-def pushData(record_type, collector, startts, endts):
+def pushData(record_type, collector, startts, endts, year, month):
 
     stream = BGPStream(
             from_time=str(startts), until_time=str(endts), collectors=[collector],
             record_type=record_type
             )
-
-    yearstr = startts[0:4]
-    monthstr = startts[5:7]
+    yearstr = str(year)
+    monthstr = str(month)
+    if len(monthstr)<2:
+        monthstr = '0' + monthstr
 
     # Create kafka topic
     topic = "ihr_bgp_" + collector + "_" + record_type + "_" + yearstr + "_" + monthstr
@@ -164,9 +165,14 @@ is given then it download data for the current hour."
     minuteStart = int(currentTime.minute/timeWindow)*timeWindow
     timeStart = ""
     timeEnd = ""
+
     if args.month and args.year:
-        timeStart = str(args.year) + "-" + str(args.month) + "-01T00:00:00"
-        timeEnd = str(args.year) + "-" + str(args.month) + "-02T00:00:00"
+        month = str(args.month)
+        if len(month) < 2:
+            month = '0'+month
+
+        timeStart = str(args.year) + "-" + month + "-01T00:00:00"
+        timeEnd = str(args.year) + "-" + month + "-02T00:00:00"
     else:
         if recordType == 'updates':
             timeStart = currentTime.replace(microsecond=0, second=0, minute=minuteStart)-timedelta(minutes=3*timeWindow)
@@ -191,6 +197,6 @@ is given then it download data for the current hour."
     logging.warning('start time: {}, end time: {}'.format(timeStart, timeEnd))
 
     logging.warning("Downloading {} data for {}".format(recordType, collector))
-    pushData(recordType, collector, timeStart, timeEnd)
+    pushData(recordType, collector, timeStart, timeEnd, args.year, args.month)
         
     logging.warning("End: %s" % sys.argv)
