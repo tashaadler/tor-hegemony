@@ -18,11 +18,13 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     assert args.year and args.collector and args.month
-    monthstr = str(args.month)
+    month = args.month
+    year = args.year
+    monthstr = str(month)
     if len(monthstr) < 2:
         monthstr = '0' + monthstr
 
-    yearstr = str(args.year)
+    yearstr = str(year)
     selected_collector = args.collector
     start_time_string = str(yearstr)+"-"+str(monthstr)+"-01T00:00:00"
     end_time_string = str(yearstr) + "-" + str(monthstr) + "-02T00:00:00"

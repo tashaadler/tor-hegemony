@@ -173,6 +173,8 @@ is given then it download data for the current hour."
 
         timeStart = str(args.year) + "-" + month + "-01T00:00:00"
         timeEnd = str(args.year) + "-" + month + "-02T00:00:00"
+        print('\n' + timeStart)
+        print('\n' + timeEnd)
     else:
         if recordType == 'updates':
             timeStart = currentTime.replace(microsecond=0, second=0, minute=minuteStart)-timedelta(minutes=3*timeWindow)

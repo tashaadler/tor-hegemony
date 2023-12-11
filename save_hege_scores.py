@@ -13,7 +13,7 @@ This should copy all of the hegemony scores from the topic ihr_hegemony_yyyy_mm 
 # populates a csv file '.../hegePerASN_yyyy-mm.csv' with a list of {asn, hege} values
 def downloadDataToFile(server, num_partitions, month, year, datapath):
     topic = "ihr_hegemony_"+year+"_"+month
-    filename = datapath + "/" "hegePerASN" + "_" + args.year + "-" + month + ".csv"
+    filename = datapath + "/hegePerASN" + "_" + year + "-" + month + ".csv"
 
     consumer = Consumer({
         'bootstrap.servers': 'localhost:9092',

@@ -87,10 +87,14 @@ def main() -> None:
             temptuple = [year, month]
             poollist.append(temptuple)
 
-    with multiprocessing.Pool(processes=args.parallel) as pool:
-        for result in pool.map(run_one_month, poollist):
-            print("IHR_HEGE " + str(year) + ' ' + str(month) + " produced")
-        pool.close()
+    #with multiprocessing.Pool(processes=args.parallel) as pool:
+     #   for result in pool.map(run_one_month, poollist):
+      #      print("IHR_HEGE " + str(year) + ' ' + str(month) + " produced")
+       # pool.close()
+
+    for yearmonth in poollist:
+        run_one_month(yearmonth)
+
 
 if __name__ == "__main__":
     main()

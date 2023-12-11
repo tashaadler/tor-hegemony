@@ -26,16 +26,16 @@ class BCScoreBuilder:
         self.end_timestamp = end_timestamp
         self.prefix_mode = prefix_mode
         self.address_family = address_family
-        self.yearstr = str(self.year)
-        self.monthstr = str(self.month)
+        yearstr = str(self.year)
+        monthstr = str(self.month)
         if len(monthstr) <2:
-            self.monthstr = '0' + self.monthstr
+            monthstr = '0' + monthstr
         if prefix_mode:
             self.kafka_data_topic = f"{PREFIX_BCSCORE_DATA_TOPIC}_{collector}"
             self.kafka_meta_data_topic = f"{PREFIX_BCSCORE_META_DATA_TOPIC}_{collector}"
         else:
-            self.kafka_data_topic = f"{AS_BCSCORE_DATA_TOPIC}_{collector}_{self.yearstr}_{self.monthstr}"
-            self.kafka_meta_data_topic = f"{AS_BCSCORE_META_DATA_TOPIC}_{collector}_{self.yearstr}_{self.monthstr}"
+            self.kafka_data_topic = f"{AS_BCSCORE_DATA_TOPIC}_{collector}_{yearstr}_{monthstr}"
+            self.kafka_meta_data_topic = f"{AS_BCSCORE_META_DATA_TOPIC}_{collector}_{yearstr}_{monthstr}"
 
     def consume_and_calculate(self):
         for current_timestamp in range(self.start_timestamp, self.end_timestamp, DUMP_INTERVAL):
